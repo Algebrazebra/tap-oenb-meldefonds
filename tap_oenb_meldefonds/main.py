@@ -9,7 +9,6 @@ a Singer record.
 """
 
 import csv
-from datetime import datetime, timezone
 import requests
 import singer
 
@@ -58,7 +57,7 @@ def download_meldefonds_data() -> str:
 def main() -> None:
     """Download Meldefonds data and export them via Singer."""
 
-    now = datetime.now(timezone.utc).isoformat()
+    now = singer.utils.now()
 
     LOGGER.info("Start of download from source")
     with Timer("request_duration", {"endpoint": OEKB_URL}):
