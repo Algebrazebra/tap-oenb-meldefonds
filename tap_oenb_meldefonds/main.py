@@ -9,6 +9,7 @@ a Singer record.
 """
 
 import csv
+import sys
 import requests
 import singer
 
@@ -50,6 +51,7 @@ def download_meldefonds_data() -> str:
     with requests.Session() as session:
         session.headers.update({"user-agent": ""})
         response = session.get(OEKB_URL)
+        response.raise_for_status()
         decoded_content = response.content.decode()
     return decoded_content
 
@@ -61,7 +63,11 @@ def main() -> None:
 
     LOGGER.info("Start of download from source")
     with Timer("request_duration", {"endpoint": OEKB_URL}):
-        meldefonds_data = download_meldefonds_data()
+        try:
+            meldefonds_data = download_meldefonds_data()
+        except requests.HTTPError as error:
+            LOGGER.fatal(error)
+            sys.exit(1)
 
     meldefonds_csv = csv.DictReader(meldefonds_data.splitlines(), delimiter=";")
     meldefonds_records = [dict(f, timestamp=now) for f in list(meldefonds_csv)]

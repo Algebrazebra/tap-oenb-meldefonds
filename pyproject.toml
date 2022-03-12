@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "tap-oenb-meldefonds"
-version = "0.1.0"
+version = "0.1.1"
 description = "Singer.io tap for extracting tax reporting fund (i.e. Meldefond) data from the OeNB website."
 authors = ["Algebrazebra <Algebrazebra@users.noreply.github.com>"]
 
