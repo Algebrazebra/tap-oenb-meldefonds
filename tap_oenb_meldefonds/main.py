@@ -1,9 +1,9 @@
-"""Singer.io tap for extracting tax reporting fund data from the OeNB website.
+"""Singer.io tap for extracting tax reporting fund data from the OeKB website.
 
 Tax reporting fund is the English translation for Meldefonds. Funds that report their
 tax information to the Austrian authorities are referred to as Meldefonds.
 
-The data is made available by the OeNB as a `.csv` file. This tap downloads the data
+The data is made available by the OeKB as a `.csv` file. This tap downloads the data
 from the endpoint set in `OEKB_URL` into memory, after which each line is exported as
 a Singer record.
 """
