@@ -2,6 +2,7 @@ import csv
 import requests
 import singer
 
+from singer.metrics import Counter, Timer
 from datetime import datetime, timezone
 
 LOGGER = singer.get_logger()
@@ -18,22 +19,18 @@ MELDEFONDS_SCHEMA = {
         },
         "Bezeichnung": {"type": "string"},
         "Steuerlicher Vertreter": {"type": "string"},
-        "KEst-Meldefonds seit": {"type": "string"},
-        "Absichtserklärung": {"type": "string"},
-        "Art gemäß FMV 2015": {
+        "KEst-Meldefonds seit": {
             "type": "string",
-            "pattern": "\\d{1,2}\\.\\d{1,2}\\.\\d{4}",
-            "minLength": 10,
-            "maxLength": 10,
+            "pattern": "$|(\\d{1,2}\\.\\d{1,2}\\.\\d{4})",
         },
+        "Absichtserklärung": {"type": "string"},
+        "Art gemäß FMV 2015": {"type": "string"},
         "Fondsstatus": {"type": "string"},
         "Ertragsverwendung": {"type": "string"},
         "Währung": {"type": "string"},
         "Fondsende": {
             "type": "string",
-            "pattern": "\\d{1,2}\\.\\d{1,2}\\.\\d{4}",
-            "minLength": 10,
-            "maxLength": 10,
+            "pattern": "$|(\\d{1,2}\\.\\d{1,2}\\.\\d{4})",
         },
     }
 }
@@ -50,12 +47,22 @@ def download_meldefonds_data() -> str:
 
 def main() -> None:
     """Download Meldefonds data and export them via Singer."""
+
     now = datetime.now(timezone.utc).isoformat()
-    meldefonds_data = download_meldefonds_data()
+
+    LOGGER.info(f"Start of download from source")
+    with Timer("request_duration", {"endpoint": OEKB_URL}):
+        meldefonds_data = download_meldefonds_data()
+
     meldefonds_csv = csv.DictReader(meldefonds_data.splitlines(), delimiter=";")
     meldefonds_records = [dict(f, timestamp=now) for f in list(meldefonds_csv)]
-    singer.write_schema("Meldefonds", MELDEFONDS_SCHEMA, key_properties=["ISIN"])
-    singer.write_records("Meldefonds", meldefonds_records)
+
+    with Counter("record_count", {"endpoint": OEKB_URL}) as counter:
+        n_records = len(meldefonds_records)
+        counter.increment(amount=n_records)
+        LOGGER.info(f"Query returned {n_records:,} records")
+        singer.write_schema("Meldefonds", MELDEFONDS_SCHEMA, key_properties=["ISIN"])
+        singer.write_records("Meldefonds", meldefonds_records)
 
 
 if __name__ == "__main__":
