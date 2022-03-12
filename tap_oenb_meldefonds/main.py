@@ -1,9 +1,19 @@
+"""Singer.io tap for extracting tax reporting fund data from the OeNB website.
+
+Tax reporting fund is the English translation for Meldefonds. Funds that report their
+tax information to the Austrian authorities are referred to as Meldefonds.
+
+The data is made available by the OeNB as a `.csv` file. This tap downloads the data
+from the endpoint set in `OEKB_URL` into memory, after which each line is exported as
+a Singer record.
+"""
+
 import csv
+from datetime import datetime, timezone
 import requests
 import singer
 
 from singer.metrics import Counter, Timer
-from datetime import datetime, timezone
 
 LOGGER = singer.get_logger()
 
@@ -50,7 +60,7 @@ def main() -> None:
 
     now = datetime.now(timezone.utc).isoformat()
 
-    LOGGER.info(f"Start of download from source")
+    LOGGER.info("Start of download from source")
     with Timer("request_duration", {"endpoint": OEKB_URL}):
         meldefonds_data = download_meldefonds_data()
 
